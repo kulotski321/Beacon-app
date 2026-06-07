@@ -50,6 +50,7 @@ class TrackingController extends Notifier<TrackingState> {
     state = state.copyWith(
       status: TrackingStatus.fetchingTarget,
       errorMessage: null,
+      failure: null,
     );
 
     final Target target;
@@ -91,6 +92,10 @@ class TrackingController extends Notifier<TrackingState> {
     state = state.copyWith(readings: const []);
   }
 
+  /// Opens the OS location settings (to recover from a permanently-denied
+  /// permission).
+  Future<void> openLocationSettings() => _repository.openLocationSettings();
+
   Future<void> _capture() async {
     final target = state.target;
     if (target == null || _capturing) return; // skip overlapping ticks
@@ -99,7 +104,7 @@ class TrackingController extends Notifier<TrackingState> {
       await _repository.captureReading(target);
       state = state.copyWith(readings: _repository.readings());
     } on LocationServiceException catch (e) {
-      _fail(e.message);
+      _fail(e.message, failure: e.failure);
     } catch (e) {
       _fail('Failed to read location: $e');
     } finally {
@@ -107,11 +112,12 @@ class TrackingController extends Notifier<TrackingState> {
     }
   }
 
-  void _fail(String message) {
+  void _fail(String message, {LocationFailure? failure}) {
     _cancelTimer();
     state = state.copyWith(
       status: TrackingStatus.error,
       errorMessage: message,
+      failure: failure,
     );
   }
 

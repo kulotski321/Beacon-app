@@ -1,5 +1,6 @@
 import '../data/models/location_reading.dart';
 import '../data/models/target.dart';
+import '../data/sources/location_service.dart';
 
 /// The phases of the tracking lifecycle (FR-1).
 enum TrackingStatus { idle, fetchingTarget, tracking, error }
@@ -13,6 +14,7 @@ class TrackingState {
     this.readings = const [],
     this.filter,
     this.errorMessage,
+    this.failure,
   });
 
   final TrackingStatus status;
@@ -25,6 +27,10 @@ class TrackingState {
   final int? filter;
 
   final String? errorMessage;
+
+  /// The specific location failure, when [status] is `error` due to permissions.
+  /// Lets the UI offer "open settings" for the permanently-denied case.
+  final LocationFailure? failure;
 
   bool get isTracking => status == TrackingStatus.tracking;
   bool get isFetchingTarget => status == TrackingStatus.fetchingTarget;
@@ -47,6 +53,7 @@ class TrackingState {
     List<LocationReading>? readings,
     Object? filter = _unset,
     Object? errorMessage = _unset,
+    Object? failure = _unset,
   }) {
     return TrackingState(
       status: status ?? this.status,
@@ -56,6 +63,9 @@ class TrackingState {
       errorMessage: identical(errorMessage, _unset)
           ? this.errorMessage
           : errorMessage as String?,
+      failure: identical(failure, _unset)
+          ? this.failure
+          : failure as LocationFailure?,
     );
   }
 }

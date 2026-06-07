@@ -1,30 +1,28 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
-import 'package:flutter/material.dart';
+import 'package:beacon_app/app.dart';
+import 'package:beacon_app/application/providers.dart';
+import 'package:beacon_app/data/models/location_reading.dart';
+import 'package:beacon_app/data/repositories/tracking_repository.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
 
-import 'package:beacon_app/main.dart';
+class MockTrackingRepository extends Mock implements TrackingRepository {}
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  testWidgets('renders the empty state and a start control on launch',
+      (tester) async {
+    final repo = MockTrackingRepository();
+    when(() => repo.readings()).thenReturn(<LocationReading>[]);
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [trackingRepositoryProvider.overrideWithValue(repo)],
+        child: const BeaconApp(),
+      ),
+    );
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
-
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    expect(find.text('Beacon'), findsOneWidget);
+    expect(find.text('Start tracking'), findsOneWidget);
+    expect(find.textContaining('No readings'), findsOneWidget);
   });
 }

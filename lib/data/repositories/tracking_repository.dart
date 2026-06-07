@@ -53,4 +53,7 @@ class TrackingRepository {
   List<LocationReading> readings() => _readingStore.getAll();
 
   Future<void> clearReadings() => _readingStore.clear();
+
+  /// Opens the OS location settings — for recovering from "denied forever".
+  Future<bool> openLocationSettings() => _locationService.openAppSettings();
 }

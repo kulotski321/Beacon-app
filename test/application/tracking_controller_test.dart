@@ -79,6 +79,7 @@ void main() {
 
     expect(currentState().status, TrackingStatus.error);
     expect(currentState().errorMessage, contains('permanently denied'));
+    expect(currentState().failure, LocationFailure.permissionDeniedForever);
   });
 
   test('captures every interval, and stop() halts further readings', () {
