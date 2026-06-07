@@ -7,7 +7,16 @@ import '../data/sources/target_api.dart';
 
 /// Data-source + repository providers. The controller depends only on
 /// [trackingRepositoryProvider]; tests override that single provider.
-final targetApiProvider = Provider<TargetApi>((ref) => TargetApi());
+final targetApiProvider = Provider<TargetApi>((ref) {
+  // Point at a different mock at launch with
+  // `--dart-define=TARGET_ENDPOINT=<url>` (e.g. a local server); otherwise the
+  // hosted mock JSON is used.
+  const endpoint = String.fromEnvironment(
+    'TARGET_ENDPOINT',
+    defaultValue: defaultTargetEndpoint,
+  );
+  return TargetApi(endpoint: Uri.parse(endpoint));
+});
 
 final locationServiceProvider =
     Provider<LocationService>((ref) => LocationService());
