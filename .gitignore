@@ -39,6 +39,10 @@ migrate_working_dir/
 .fvm/flutter_sdk
 .fvm/versions
 
+# Local knowledge base — internal PRD/spec/checklist docs for the coding agent.
+# Kept out of the repo so planning markdown never ships publicly.
+knowledge-base/
+
 # Symbolication related
 app.*.symbols
 
