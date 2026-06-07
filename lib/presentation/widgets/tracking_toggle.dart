@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../application/tracking_controller.dart';
+import '../../application/tracking_state.dart';
 
 /// The start/stop control. Amber while tracking, navy when idle, and a spinner
 /// while the target is being fetched.
@@ -11,12 +12,16 @@ class TrackingToggle extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(trackingControllerProvider);
+    // Only the status drives this button, so select on it: a new reading every
+    // 5 s must not rebuild the start/stop control.
+    final status = ref.watch(
+      trackingControllerProvider.select((state) => state.status),
+    );
     final controller = ref.read(trackingControllerProvider.notifier);
     final scheme = Theme.of(context).colorScheme;
 
-    final isTracking = state.isTracking;
-    final isBusy = state.isFetchingTarget;
+    final isTracking = status == TrackingStatus.tracking;
+    final isBusy = status == TrackingStatus.fetchingTarget;
 
     return SizedBox(
       width: double.infinity,
@@ -44,8 +49,8 @@ class TrackingToggle extends ConsumerWidget {
           isBusy
               ? 'Starting…'
               : isTracking
-                  ? 'Stop tracking'
-                  : 'Start tracking',
+              ? 'Stop tracking'
+              : 'Start tracking',
         ),
       ),
     );

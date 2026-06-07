@@ -24,5 +24,15 @@ linter:
     # avoid_print: false  # Uncomment to disable the `avoid_print` rule
     # prefer_single_quotes: true  # Uncomment to enable the `prefer_single_quotes` rule
 
+    # Performance: enforce `const` so widget subtrees are canonicalised and
+    # skipped on rebuild, and prefer the lighter single-purpose boxes over
+    # the general-purpose Container. (Not enabled by the stock flutter_lints.)
+    prefer_const_constructors: true
+    prefer_const_constructors_in_immutables: true
+    prefer_const_declarations: true
+    prefer_const_literals_to_create_immutables: true
+    use_colored_box: true
+    use_decorated_box: true
+
 # Additional information about this file can be found at
 # https://dart.dev/guides/language/analysis-options

@@ -18,7 +18,8 @@ class HomeScreen extends ConsumerWidget {
     // Surface errors as they occur: a dialog for permanently-denied permission
     // (which only Settings can fix), a snackbar for everything else.
     ref.listen<TrackingState>(trackingControllerProvider, (previous, next) {
-      final isNewError = next.hasError &&
+      final isNewError =
+          next.hasError &&
           next.errorMessage != null &&
           next.errorMessage != previous?.errorMessage;
       if (!isNewError) return;
@@ -54,19 +55,19 @@ class HomeScreen extends ConsumerWidget {
                 children: [
                   FilterSelector(
                     filter: state.filter,
-                    onChanged:
-                        ref.read(trackingControllerProvider.notifier).setFilter,
+                    onChanged: ref
+                        .read(trackingControllerProvider.notifier)
+                        .setFilter,
                   ),
                   Padding(
                     padding: const EdgeInsets.only(top: 8, left: 4),
                     child: Text(
                       'Showing ${readings.length} of ${state.readings.length}',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onSurface
-                                .withValues(alpha: 0.6),
-                          ),
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withValues(alpha: 0.6),
+                      ),
                     ),
                   ),
                 ],
@@ -77,7 +78,8 @@ class HomeScreen extends ConsumerWidget {
                 ? const EmptyState(
                     icon: Icons.my_location_outlined,
                     title: 'No readings yet',
-                    message: 'Start tracking to record your distance to the '
+                    message:
+                        'Start tracking to record your distance to the '
                         'target every 5 seconds.',
                   )
                 : ListView.separated(
@@ -91,11 +93,11 @@ class HomeScreen extends ConsumerWidget {
                     ),
                   ),
           ),
-          SafeArea(
+          const SafeArea(
             top: false,
             child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: const TrackingToggle(),
+              padding: EdgeInsets.all(16),
+              child: TrackingToggle(),
             ),
           ),
         ],
@@ -166,8 +168,9 @@ class _StatusBanner extends StatelessWidget {
       TrackingStatus.tracking => 'Tracking',
       TrackingStatus.error => 'Stopped — error',
     };
-    final distanceText =
-        latest != null ? formatDistance(latest.distanceMeters) : '—';
+    final distanceText = latest != null
+        ? formatDistance(latest.distanceMeters)
+        : '—';
 
     return Container(
       width: double.infinity,
@@ -191,23 +194,27 @@ class _StatusBanner extends StatelessWidget {
             label: latest != null
                 ? 'Distance to target: $distanceText'
                 : 'No reading yet',
-            child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 300),
-              transitionBuilder: (child, animation) => FadeTransition(
-                opacity: animation,
-                child: SizeTransition(
-                  sizeFactor: animation,
-                  axisAlignment: -1,
-                  child: child,
+            // Isolate the cross-fade so its 300 ms repaint stays on its own
+            // layer and never dirties the banner or the list below.
+            child: RepaintBoundary(
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 300),
+                transitionBuilder: (child, animation) => FadeTransition(
+                  opacity: animation,
+                  child: SizeTransition(
+                    sizeFactor: animation,
+                    axisAlignment: -1,
+                    child: child,
+                  ),
                 ),
-              ),
-              child: Text(
-                distanceText,
-                key: ValueKey(distanceText),
-                style: TextStyle(
-                  color: scheme.secondary,
-                  fontSize: 40,
-                  fontWeight: FontWeight.bold,
+                child: Text(
+                  distanceText,
+                  key: ValueKey(distanceText),
+                  style: TextStyle(
+                    color: scheme.secondary,
+                    fontSize: 40,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ),
@@ -224,7 +231,8 @@ class _StatusBanner extends StatelessWidget {
           if (latest != null)
             _MetaRow(
               icon: Icons.history,
-              text: '${formatReadingCount(state.readings.length)}'
+              text:
+                  '${formatReadingCount(state.readings.length)}'
                   ' · updated ${formatClock(latest.timestamp)}',
               color: onPrimaryMuted,
             ),
@@ -233,7 +241,8 @@ class _StatusBanner extends StatelessWidget {
               padding: const EdgeInsets.only(top: 6),
               child: _MetaRow(
                 icon: Icons.flag_outlined,
-                text: 'Target '
+                text:
+                    'Target '
                     '${formatCoordinate(state.target!.latitude)}, '
                     '${formatCoordinate(state.target!.longitude)}',
                 color: onPrimaryMuted,
@@ -247,11 +256,7 @@ class _StatusBanner extends StatelessWidget {
 
 /// A small icon + label line used for the banner's metadata.
 class _MetaRow extends StatelessWidget {
-  const _MetaRow({
-    required this.icon,
-    required this.text,
-    required this.color,
-  });
+  const _MetaRow({required this.icon, required this.text, required this.color});
 
   final IconData icon;
   final String text;
@@ -302,7 +307,8 @@ class _LiveIndicatorState extends State<_LiveIndicator>
 
   @override
   Widget build(BuildContext context) {
-    final reduceMotion = MediaQuery.maybeOf(context)?.disableAnimations ?? false;
+    final reduceMotion =
+        MediaQuery.maybeOf(context)?.disableAnimations ?? false;
     if (reduceMotion) {
       _controller.stop();
     } else if (!_controller.isAnimating) {
@@ -332,9 +338,13 @@ class _LiveIndicatorState extends State<_LiveIndicator>
     );
 
     if (reduceMotion) return row;
-    return FadeTransition(
-      opacity: Tween<double>(begin: 0.3, end: 1).animate(_controller),
-      child: row,
+    // The pulse repaints continuously while tracking; a boundary keeps those
+    // repaints off the rest of the app bar.
+    return RepaintBoundary(
+      child: FadeTransition(
+        opacity: Tween<double>(begin: 0.3, end: 1).animate(_controller),
+        child: row,
+      ),
     );
   }
 }
