@@ -37,6 +37,17 @@ void main() {
     });
   });
 
+  group('latest', () {
+    test('is null when there are no readings', () {
+      expect(const TrackingState().latest, isNull);
+    });
+
+    test('is the newest (last stored) reading', () {
+      final state = TrackingState(readings: [readingAt(0), readingAt(7)]);
+      expect(state.latest, readingAt(7));
+    });
+  });
+
   group('copyWith', () {
     test('clears nullable fields when null is passed explicitly', () {
       const state = TrackingState(filter: 5, errorMessage: 'boom');

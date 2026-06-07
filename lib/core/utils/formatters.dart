@@ -21,3 +21,15 @@ String formatTimestamp(DateTime time) {
 /// Formats a single coordinate component to 5 decimal places (FR-4),
 /// e.g. `1.26500`.
 String formatCoordinate(double value) => value.toStringAsFixed(5);
+
+/// Formats a reading count with the correctly pluralised noun,
+/// e.g. `1 reading`, `5 readings`.
+String formatReadingCount(int count) =>
+    '$count ${count == 1 ? 'reading' : 'readings'}';
+
+/// Formats a timestamp as a local wall-clock time only, e.g. `5:42:13 PM`.
+///
+/// Used for the status banner's "updated …" line, where the date is implied;
+/// the full date lives on each list row via [formatTimestamp].
+String formatClock(DateTime time) =>
+    DateFormat('h:mm:ss a').format(time.toLocal());

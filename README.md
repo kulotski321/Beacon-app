@@ -106,7 +106,7 @@ lib/
 │   └── providers.dart              # source + repository providers
 └── presentation/
     ├── screens/home_screen.dart
-    └── widgets/{tracking_toggle, filter_selector, reading_tile}.dart
+    └── widgets/{tracking_toggle, filter_selector, reading_tile, empty_state}.dart
 ```
 
 **State machine:** `idle → fetchingTarget → tracking → idle`, with an `error`
@@ -120,7 +120,7 @@ Tested with `flutter_test`, `mocktail`, and `fake_async`.
 ## Tests
 
 ```bash
-fvm flutter test       # 48 tests
+fvm flutter test       # 53 tests
 fvm flutter analyze    # zero issues
 ```
 

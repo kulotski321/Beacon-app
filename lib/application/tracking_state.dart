@@ -36,6 +36,9 @@ class TrackingState {
   bool get isFetchingTarget => status == TrackingStatus.fetchingTarget;
   bool get hasError => status == TrackingStatus.error;
 
+  /// The most recent reading (newest), or null when there are none.
+  LocationReading? get latest => readings.isEmpty ? null : readings.last;
+
   /// Readings for display: newest-first, limited to the most recent [filter].
   List<LocationReading> get visibleReadings {
     final newestFirst = readings.reversed.toList(growable: false);

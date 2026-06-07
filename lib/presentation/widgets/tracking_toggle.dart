@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../application/tracking_controller.dart';
@@ -21,8 +22,13 @@ class TrackingToggle extends ConsumerWidget {
       width: double.infinity,
       height: 56,
       child: FilledButton.icon(
-        onPressed:
-            isBusy ? null : (isTracking ? controller.stop : controller.start),
+        onPressed: isBusy
+            ? null
+            : () {
+                // Tactile confirmation for the primary action (no-op off-mobile).
+                HapticFeedback.mediumImpact();
+                isTracking ? controller.stop() : controller.start();
+              },
         style: FilledButton.styleFrom(
           backgroundColor: isTracking ? scheme.secondary : scheme.primary,
           foregroundColor: isTracking ? Colors.black87 : Colors.white,

@@ -29,6 +29,17 @@ void main() {
     });
   });
 
+  group('formatReadingCount', () {
+    test('uses the singular noun for exactly one', () {
+      expect(formatReadingCount(1), '1 reading');
+    });
+
+    test('uses the plural noun otherwise', () {
+      expect(formatReadingCount(0), '0 readings');
+      expect(formatReadingCount(5), '5 readings');
+    });
+  });
+
   group('formatTimestamp', () {
     test('renders a readable local timestamp', () {
       // Constructed as a local DateTime, so toLocal() is a no-op and the result
@@ -37,6 +48,13 @@ void main() {
         formatTimestamp(DateTime(2026, 6, 7, 17, 42, 13)),
         'Jun 7, 2026 5:42:13 PM',
       );
+    });
+  });
+
+  group('formatClock', () {
+    test('renders time only, without the date', () {
+      expect(formatClock(DateTime(2026, 6, 7, 17, 42, 13)), '5:42:13 PM');
+      expect(formatClock(DateTime(2026, 1, 1, 0, 0, 0)), '12:00:00 AM');
     });
   });
 }
