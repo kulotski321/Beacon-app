@@ -1,0 +1,48 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Beacon (hosted target)",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main.dart"
+    },
+    {
+      "name": "Beacon (local mock · localhost)",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main.dart",
+      // Desktop / iOS sim / web. Serve mock/target.json first, e.g.:
+      //   cd mock && python -m http.server 8080
+      "toolArgs": [
+        "--dart-define=TARGET_ENDPOINT=http://localhost:8080/target.json"
+      ]
+    },
+    {
+      "name": "Beacon (local mock · Android emulator)",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main.dart",
+      // Android emulator reaches the host machine via 10.0.2.2, not localhost.
+      // Cleartext HTTP also needs android:usesCleartextTraffic on the emulator;
+      // the hosted HTTPS default avoids that.
+      "toolArgs": [
+        "--dart-define=TARGET_ENDPOINT=http://10.0.2.2:8080/target.json"
+      ]
+    },
+    {
+      "name": "Beacon (profile)",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main.dart",
+      "flutterMode": "profile"
+    },
+    {
+      "name": "Beacon (release)",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main.dart",
+      "flutterMode": "release"
+    }
+  ]
+}

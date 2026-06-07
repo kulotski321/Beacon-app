@@ -1,0 +1,12 @@
+{
+  // Use the FVM-pinned Flutter SDK (.fvm/fvm_config.json → 3.41.9) instead of
+  // whatever Flutter is on PATH, so VS Code's run/debug matches `fvm flutter`.
+  "dart.flutterSdkPath": ".fvm/flutter_sdk",
+  // Keep the FVM SDK cache out of file search / watching.
+  "search.exclude": {
+    "**/.fvm": true
+  },
+  "files.watcherExclude": {
+    "**/.fvm": true
+  }
+}
