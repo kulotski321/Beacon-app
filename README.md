@@ -11,10 +11,16 @@ halts collection immediately. Readings survive app restarts.
 
 ## Screenshot
 
-> _Run `fvm flutter run` on a device and drop a capture at `docs/screenshot.png`._
-> The home screen shows a navy status banner with the latest distance, a
-> 5/10/15/20/All filter, the readings list, and a Start/Stop button (amber while
-> tracking, with a pulsing "LIVE" badge in the app bar).
+<p align="center">
+  <img src="docs/screenshot.png" width="300"
+       alt="Beacon home screen: a navy status banner showing the distance to the target with the reading count and last-update time, a 5/10/15/20/All filter, the newest-first readings list with the latest reading highlighted, and a Start tracking button." />
+</p>
+
+The home screen: a navy status banner with the live distance to the target
+(reading count and last-update time beneath it), the 5/10/15/20/All filter, the
+newest-first readings list with the most recent reading highlighted, and the
+Start/Stop button — amber while tracking, with a pulsing "LIVE" badge in the
+app bar.
 
 ## Requirements coverage
 
