@@ -1,152 +1,101 @@
 # Beacon
 
-**Know your distance.** A small Flutter app that tracks your device's location at a
-fixed interval and shows how far you are from a target coordinate fetched from a
-mock backend. Built as a Senior Flutter Engineer take-home.
-
-On **Start**, Beacon fetches the target, then every 5 seconds (foreground only)
-records the device position, computes the **Haversine** distance to the target,
-persists the reading, and shows it in a filterable, newest-first list. **Stop**
-halts collection immediately. Readings survive app restarts.
+A small Flutter location tracker, built as a Senior Flutter Engineer take-home.
+Tap **Start** and every 5 seconds it records your position, computes the
+**Haversine** distance to a target coordinate (fetched from a mock backend), and
+adds it to a filterable, newest-first list. **Stop** halts immediately, and
+readings survive restarts.
 
 ## Screenshot
 
 <p align="center">
   <img src="docs/screenshot.png" width="300"
-       alt="Beacon home screen: a navy status banner showing the distance to the target with the reading count and last-update time, a 5/10/15/20/All filter, the newest-first readings list with the latest reading highlighted, and a Start tracking button." />
+       alt="Beacon home screen — status banner with the live distance to target, a 5/10/15/20/All filter, the readings list with the latest reading highlighted, and a Start tracking button." />
 </p>
 
-The home screen: a navy status banner with the live distance to the target
-(reading count and last-update time beneath it), the 5/10/15/20/All filter, the
-newest-first readings list with the most recent reading highlighted, and the
-Start/Stop button — amber while tracking, with a pulsing "LIVE" badge in the
-app bar.
+## Run
 
-## Requirements coverage
-
-| Requirement | Where |
-|---|---|
-| Start/Stop toggle, fetch target, 5 s foreground polling | `TrackingController` + `TrackingToggle` |
-| Haversine distance (m / km) | `core/utils/haversine.dart` (hand-rolled) + `formatters.dart` |
-| Store timestamp, lat, lng, distance | `LocationReading` + Hive (`reading_store.dart`) |
-| Scrollable list of all readings | `home_screen.dart` + `reading_tile.dart` |
-| Filter most recent 5 / 10 / 15 / 20 | `FilterSelector` + `TrackingController.setFilter` |
-| Graceful permission handling | `location_service.dart` + snackbar / settings dialog |
-
-## Setup & run
-
-This project pins its Flutter version with [FVM](https://fvm.app)
-(**Flutter 3.41.9 / Dart 3.11.5**, see `.fvm/fvm_config.json`).
+Flutter is pinned with [FVM](https://fvm.app) (**3.41.9 / Dart 3.11.5**):
 
 ```bash
-# 1. Install the pinned SDK (reads .fvm/fvm_config.json)
-fvm install
-
-# 2. Fetch dependencies
+fvm install            # install the pinned SDK
 fvm flutter pub get
-
-# 3. Run on a connected device or emulator
 fvm flutter run
 ```
 
-Not using FVM? Any Flutter **≥ 3.41** (Dart ≥ 3.11) works — substitute plain
-`flutter` for `fvm flutter`.
+No FVM? Any Flutter ≥ 3.41 works — just drop the `fvm` prefix.
 
 ## Mock backend
 
-The app fetches the target JSON:
+Target shape: `{ "id": "001", "target_lat": 1.265, "target_lng": 103.695 }`
 
-```json
-{ "id": "001", "target_lat": 1.265, "target_lng": 103.695 }
-```
-
-**Default (no setup):** a hosted copy of [`mock/target.json`](mock/target.json),
-served from this repo via GitHub raw. It just works once the repo is pushed.
-
-**Local server (optional):** serve the file and point the app at it with a
-`--dart-define`, no code changes needed:
+Works out of the box against a hosted copy of
+[`mock/target.json`](mock/target.json). To point it at your own server instead:
 
 ```bash
-# serve mock/target.json (any static server works)
 cd mock && python -m http.server 8080
-
-# run against it
 fvm flutter run --dart-define=TARGET_ENDPOINT=http://localhost:8080/target.json
 ```
 
-> On the **Android emulator**, reach your host via `http://10.0.2.2:8080/...`,
-> and note that Android blocks cleartext HTTP by default — the hosted HTTPS
-> default avoids that. The local option is simplest on desktop/web/iOS.
+(Android emulator: use `http://10.0.2.2:8080/...` — it blocks cleartext HTTP, so
+the hosted HTTPS default is simplest there.)
+
+## Requirements
+
+| Spec | Where |
+|---|---|
+| Start/Stop, fetch target, 5 s foreground polling | `tracking_controller.dart` |
+| Haversine distance (m / km) | `core/utils/haversine.dart` (hand-rolled) |
+| Store timestamp, lat, lng, distance | `location_reading.dart` + Hive |
+| Scrollable list, filter to recent 5/10/15/20 | `home_screen.dart`, `filter_selector.dart` |
+| Graceful location permissions | `location_service.dart` + snackbar / dialog |
 
 ## Architecture
 
-Pragmatic layered architecture with a one-way dependency flow
-(`presentation → application → data → core`). The UI talks only to the
-`TrackingController`, which talks only to the `TrackingRepository`, so widgets
-never touch http / geolocator / Hive directly. State management is **Riverpod**
-(a `Notifier` holding an immutable `TrackingState`), keeping logic out of widgets
-and fully unit-testable; the timer lives in the controller so tracking survives
-rebuilds and is cancelled deterministically on stop and dispose.
+One-way layering — **presentation → application → data → core**. Widgets talk
+only to a Riverpod `TrackingController` (a `Notifier` over an immutable
+`TrackingState`); the controller talks only to `TrackingRepository`, so the UI
+never touches http / geolocator / Hive directly. The 5 s timer lives in the
+controller, so it survives widget rebuilds and is cancelled on stop and dispose.
 
 ```
 lib/
-├── main.dart                       # bootstrap: Hive.initFlutter + ProviderScope
-├── app.dart                        # MaterialApp + Beacon theme (navy / amber)
-├── core/utils/
-│   ├── haversine.dart              # pure great-circle distance (unit-tested)
-│   └── formatters.dart             # distance (m/km), coordinate, timestamp
+├── core/utils/        haversine · formatters
 ├── data/
-│   ├── models/
-│   │   ├── target.dart
-│   │   ├── location_reading.dart
-│   │   └── location_reading_adapter.dart   # hand-written Hive adapter
-│   ├── sources/
-│   │   ├── target_api.dart         # http GET + typed error handling
-│   │   ├── location_service.dart   # geolocator + permission flow
-│   │   └── reading_store.dart      # hive_ce box: add / getAll / clear
-│   └── repositories/
-│       └── tracking_repository.dart
-├── application/
-│   ├── tracking_state.dart         # immutable state + visibleReadings filter
-│   ├── tracking_controller.dart    # Riverpod Notifier: state machine + 5 s timer
-│   └── providers.dart              # source + repository providers
-└── presentation/
-    ├── screens/home_screen.dart
-    └── widgets/{tracking_toggle, filter_selector, reading_tile, empty_state}.dart
+│   ├── models/        target · location_reading (+ hand-written Hive adapter)
+│   ├── sources/       target_api · location_service · reading_store
+│   └── repositories/  tracking_repository
+├── application/       tracking_controller · tracking_state · providers
+└── presentation/      home_screen · widgets/
 ```
 
-**State machine:** `idle → fetchingTarget → tracking → idle`, with an `error`
-branch for a failed target fetch or a blocked location read.
+State machine: `idle → fetchingTarget → tracking → idle`, with an `error` branch
+for a failed fetch or a blocked location read.
 
-### Key packages
-`flutter_riverpod` (state) · `geolocator` (location + permissions) · `http`
-(mock fetch) · `hive_ce` / `hive_ce_flutter` (persistence) · `intl` (formatting).
-Tested with `flutter_test`, `mocktail`, and `fake_async`.
+**Packages:** flutter_riverpod · geolocator · http · hive_ce · intl
+(tests: mocktail, fake_async).
 
 ## Tests
 
 ```bash
-fvm flutter test       # 53 tests
-fvm flutter analyze    # zero issues
+fvm flutter test       # 53 passing
+fvm flutter analyze    # clean
 ```
 
-Coverage includes: hand-rolled Haversine accuracy (an exact known value, a long
-real-world pair, and a cross-check within 0.5 % of `Geolocator.distanceBetween`),
-formatters, model JSON round-trips, the API's error handling (timeout / non-200 /
-malformed JSON via `MockClient`), the geolocator permission branches (`mocktail`),
-a real temp-directory Hive round-trip, and the full controller state machine
-including the 5-second timer (driven deterministically with `fake_async`).
+Covers the Haversine (including a cross-check against
+`Geolocator.distanceBetween`), formatters, model JSON, API error handling,
+permission branches, a real Hive round-trip, and the full controller state
+machine with its 5 s timer (driven by `fake_async`).
 
-## Assumptions
+## Decisions
 
-- **Immediate first reading** on Start (then every 5 s) — gives instant feedback
-  and surfaces permission errors right away, rather than waiting 5 s.
-- **Distance display:** `< 1000 m` → whole metres (`742 m`); `≥ 1000 m` →
-  kilometres with 2 decimals (`12.48 km`). Earth radius 6,371,000 m (mean).
-- **List is newest-first**; filtering is a pure view concern — storage always
-  keeps every reading. An **"All"** option is added beyond the required 5/10/15/20.
-- **Persistence:** Hive (`hive_ce`, manual adapter, no codegen); readings survive
-  restarts. In-memory storage was not used.
-- **Foreground only:** polling via `Timer.periodic`; no background tracking. If a
-  position read takes longer than the 5 s interval, the overlapping tick is skipped.
-- **Coordinates** shown to 5 decimal places; **timestamps** in device local time.
+- **First reading fires immediately** on Start, then every 5 s — instant
+  feedback, and permission errors surface right away instead of after 5 s.
+- **Distance format:** `< 1 km` shows metres (`742 m`), otherwise km
+  (`12.48 km`). Mean Earth radius 6,371,000 m.
+- **Persistence:** Hive (`hive_ce`, manual adapter, no codegen) over in-memory,
+  so readings survive restarts.
+- **Filtering is view-only** — storage always keeps every reading. Added an
+  **All** option on top of the required 5/10/15/20.
+- **Foreground only** (`Timer.periodic`); a tick is skipped if the previous GPS
+  read hasn't finished.
